@@ -30,5 +30,10 @@ urlpatterns = [
         views.SubscriptionRestView.as_view(),
         name="subscription"
     ),
+    url(
+        r"^plans/$",
+        views.PlanRestView.as_view(),
+        name="plan"
+    ),
 
 ]
