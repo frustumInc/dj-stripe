@@ -9,14 +9,17 @@
 
 from __future__ import unicode_literals
 
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
-from ...models import Customer
+from ...models import Customer, Plan
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
+
+
 
 
 class SubscriptionRestView(APIView):
@@ -95,3 +98,12 @@ class SubscriptionRestView(APIView):
                 "Something went wrong cancelling the subscription.",
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class PlanRestView(APIView):
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        plans = [settings.DJSTRIPE_PLANS[plan] for plan in settings.DJSTRIPE_PLANS.keys()]
+        return Response(plans)
