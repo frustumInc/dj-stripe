@@ -35,5 +35,9 @@ urlpatterns = [
         views.PlanRestView.as_view(),
         name="plan"
     ),
-
+    url(
+        r"^invoices/$",
+        views.InvoiceRestView.as_view(),
+        name="invoice"
+    ),
 ]

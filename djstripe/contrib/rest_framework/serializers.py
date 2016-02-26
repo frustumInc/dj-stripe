@@ -10,7 +10,7 @@
 from __future__ import unicode_literals
 
 from rest_framework.serializers import ModelSerializer
-from djstripe.models import CurrentSubscription
+from djstripe.models import CurrentSubscription, Invoice
 from rest_framework import serializers
 
 
@@ -24,3 +24,8 @@ class CreateSubscriptionSerializer(serializers.Serializer):
 
     stripe_token = serializers.CharField(max_length=200)
     plan = serializers.CharField(max_length=200)
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
