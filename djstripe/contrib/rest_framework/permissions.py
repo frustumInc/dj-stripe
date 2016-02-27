@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from rest_framework.permissions import BasePermission
 
+from djstripe.models import Customer
+
 from ...utils import subscriber_has_active_subscription
 from ...settings import subscriber_request_callback
 
@@ -19,6 +21,9 @@ class DJStripeSubscriptionPermission(BasePermission):
         """
 
         try:
-            subscriber_has_active_subscription(subscriber_request_callback(request))
+            customer, created = Customer.get_or_create(
+                subscriber=subscriber_request_callback(request)
+            )
+            return customer.has_active_subscription()
         except AttributeError:
             return False
