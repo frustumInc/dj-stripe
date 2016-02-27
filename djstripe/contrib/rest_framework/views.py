@@ -9,6 +9,8 @@
 
 from __future__ import unicode_literals
 
+import stripe
+
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -21,6 +23,7 @@ from djstripe.contrib.rest_framework.serializers import InvoiceSerializer
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
 from ...models import Customer, Plan
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
+from .permissions import DJStripeSubscriptionPermission
 
 
 
@@ -122,3 +125,23 @@ class InvoiceRestView(generics.ListAPIView):
             subscriber=subscriber_request_callback(self.request)
         )
         return Invoice.objects.filter(customer=customer).order_by('created')
+
+
+class ChangeCreditCardRestView(APIView):
+    permission_classes = (IsAuthenticated, DJStripeSubscriptionPermission)
+
+    def post(self, request):
+        customer, created = Customer.get_or_create(
+            subscriber=subscriber_request_callback(self.request)
+        )
+        try:
+            send_invoice = customer.card_fingerprint == ""
+            customer.update_card(
+                request.data.get("stripe_token")
+            )
+            if send_invoice:
+                customer.send_invoice()
+            customer.retry_unpaid_invoices()
+        except stripe.StripeError as exc:
+            return Response({'stripe_error': str(exc)})
+        return Response({'info': 'your card has been updated'})
