@@ -10,6 +10,7 @@
 from __future__ import unicode_literals
 
 import stripe
+from decimal import Decimal
 
 from django.conf import settings
 from rest_framework.response import Response
@@ -24,8 +25,6 @@ from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
 from ...models import Customer, Plan
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
 from .permissions import DJStripeSubscriptionPermission
-
-
 
 
 class SubscriptionRestView(APIView):
@@ -145,3 +144,20 @@ class ChangeCreditCardRestView(APIView):
         except stripe.StripeError as exc:
             return Response({'stripe_error': str(exc)})
         return Response({'info': 'your card has been updated'})
+
+
+class ChargeCreditCardRestView(APIView):
+    """Individual Charge Users Card"""
+
+    permission_classes = (IsAuthenticated, DJStripeSubscriptionPermission)
+
+    def post(self, request):
+        customer, created = Customer.get_or_create(
+            subscriber=request.user
+        )
+        amount = Decimal(request.data.get('amount'))
+        try:
+            customer.charge(amount, send_receipt=False)
+            return Response({'info': "your card has been charged"})
+        except:
+            return Response({'info': "your card could not be charged"})
