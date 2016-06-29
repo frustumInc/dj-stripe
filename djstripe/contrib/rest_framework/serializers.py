@@ -22,7 +22,7 @@ class SubscriptionSerializer(ModelSerializer):
 
 class CreateSubscriptionSerializer(serializers.Serializer):
 
-    stripe_token = serializers.CharField(max_length=200)
+    stripe_token = serializers.CharField(max_length=200, required=False)
     plan = serializers.CharField(max_length=200)
 
 
