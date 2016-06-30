@@ -9,6 +9,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import stripe
 from decimal import Decimal
 
@@ -27,6 +28,7 @@ from ...models import Customer, Plan
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
 from .permissions import DJStripeSubscriptionPermission
 
+logger = logging.getLogger(__name__)
 
 
 class SubscriptionRestView(APIView):
@@ -166,7 +168,9 @@ class ChargeCreditCardRestView(APIView):
         try:
             charged = customer.charge(amount, send_receipt=False)
             credit_card_charged.send(sender=self.__class__, customer=customer, amount=amount)
+            logger.info("Charged %s from customer %s" % (amount, customer.id))
             return Response({'info': "your card has been charged"})
         except Exception, e:
+            logger.error(e)
             return Response({'info': "your card could not be charged"}, status=status.HTTP_400_BAD_REQUEST)
 
