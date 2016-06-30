@@ -167,6 +167,6 @@ class ChargeCreditCardRestView(APIView):
             charged = customer.charge(amount, send_receipt=False)
             credit_card_charged.send(sender=self.__class__, customer=customer, amount=amount)
             return Response({'info': "your card has been charged"})
-        except:
-            return Response({'info': "your card could not be charged"})
+        except Exception, e:
+            return Response({'info': "your card could not be charged"}, status=status.HTTP_400_BAD_REQUEST)
 
