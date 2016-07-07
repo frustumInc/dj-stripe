@@ -166,7 +166,7 @@ class ChargeCreditCardRestView(APIView):
         )
         amount = Decimal(request.data.get('amount'))
         try:
-            charged = customer.charge(amount, send_receipt=False)
+            charged = customer.charge(amount, send_receipt=False, receipt_email=customer.subscriber.email)
             credit_card_charged.send(sender=self.__class__, customer=customer, amount=amount)
             logger.info("Charged %s from customer %s" % (amount, customer.id))
             return Response({'info': "your card has been charged"})
