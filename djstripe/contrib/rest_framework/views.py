@@ -155,6 +155,9 @@ class ChangeCreditCardRestView(APIView):
 credit_card_charged = django.dispatch.Signal(
         providing_args=['customer', 'amount'])
 
+credit_card_charge_failed = django.dispatch.Signal(
+        providing_args=['customer', 'amount', 'exception'])
+
 
 class ChargeCreditCardRestView(APIView):
     """Individual Charge Users Card"""
@@ -173,5 +176,11 @@ class ChargeCreditCardRestView(APIView):
             return Response({'info': "your card has been charged"})
         except Exception, e:
             logger.error(e)
-            return Response({'info': "your card could not be charged"}, status=status.HTTP_400_BAD_REQUEST)
+            credit_card_charge_failed.send(
+                    sender=self.__class__,
+                    customer=customer,
+                    amount=amount,
+                    exception=e)
+
+            return Response({'info': e.message}, status=status.HTTP_400_BAD_REQUEST)
 
