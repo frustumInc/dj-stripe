@@ -152,7 +152,8 @@ class ChangeCreditCardRestView(APIView):
         return Response({'info': 'your card has been updated'})
 
 
-credit_card_charged = django.dispatch.Signal(providing_args=['customer', 'amount'])
+credit_card_charged = django.dispatch.Signal(
+        providing_args=['customer', 'amount'])
 
 
 class ChargeCreditCardRestView(APIView):
