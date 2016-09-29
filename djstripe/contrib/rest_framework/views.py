@@ -21,7 +21,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
 from djstripe.models import Invoice
-from djstripe.contrib.rest_framework.serializers import InvoiceSerializer
+from djstripe.contrib.rest_framework.serializers import (
+        InvoiceSerializer, ChargeSerializer)
 
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
 from ...models import Customer, Plan
@@ -130,6 +131,18 @@ class InvoiceRestView(generics.ListAPIView):
             subscriber=subscriber_request_callback(self.request)
         )
         return Invoice.objects.filter(customer=customer).order_by('created')
+
+
+class ChargeRestView(generics.ListAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ChargeSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        customer, created = Customer.get_or_create(
+            subscriber=subscriber_request_callback(self.request)
+        )
+        return customer.charges.filter(invoice=None).order_by('created')
 
 
 class ChangeCreditCardRestView(APIView):
