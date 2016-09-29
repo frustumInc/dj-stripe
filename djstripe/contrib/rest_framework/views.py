@@ -169,9 +169,17 @@ class ChargeCreditCardRestView(APIView):
             subscriber=request.user
         )
         amount = Decimal(request.data.get('amount'))
+        description = request.data.get('description', None)
+
         try:
-            charged = customer.charge(amount, send_receipt=False, receipt_email=customer.subscriber.email)
-            credit_card_charged.send(sender=self.__class__, customer=customer, amount=amount)
+            charged = customer.charge(
+                amount,
+                description=description,
+                send_receipt=True,
+                receipt_email=customer.subscriber.email
+            )
+            credit_card_charged.send(
+                    sender=self.__class__, customer=customer, amount=amount)
             logger.info("Charged %s from customer %s" % (amount, customer.id))
             return Response({'info': "your card has been charged"})
         except Exception, e:
@@ -182,5 +190,5 @@ class ChargeCreditCardRestView(APIView):
                     amount=amount,
                     exception=e)
 
-            return Response({'info': e.message}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response(
+                    {'info': e.message}, status=status.HTTP_400_BAD_REQUEST)
