@@ -188,7 +188,7 @@ class ChargeCreditCardRestView(APIView):
             charged = customer.charge(
                 amount,
                 description=description,
-                send_receipt=True,
+                send_receipt=False,
                 receipt_email=customer.subscriber.email
             )
             credit_card_charged.send(
