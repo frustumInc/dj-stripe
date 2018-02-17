@@ -20,9 +20,9 @@ from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from djstripe.models import Invoice
+from djstripe.models import (Invoice, InvoiceItem)
 from djstripe.contrib.rest_framework.serializers import (
-        InvoiceSerializer, ChargeSerializer)
+        InvoiceSerializer, InvoiceItemSerializer, ChargeSerializer)
 
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
 from ...models import Customer, Plan
@@ -131,6 +131,16 @@ class InvoiceRestView(generics.ListAPIView):
             subscriber=subscriber_request_callback(self.request)
         )
         return Invoice.objects.filter(customer=customer).order_by('created')
+
+
+class InvoiceItemRestView(generics.ListAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = InvoiceItemSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        stripe_id = self.request._request.path[19:-1]
+        return InvoiceItem.objects.filter(stripe_id=stripe_id).order_by('created')
 
 
 class ChargeRestView(generics.ListAPIView):
