@@ -139,8 +139,8 @@ class InvoiceItemRestView(generics.ListAPIView):
     serializer_class = InvoiceItemSerializer
 
     def get_queryset(self, *args, **kwargs):
-        stripe_id = self.request._request.path[19:-1]
-        return InvoiceItem.objects.filter(stripe_id=stripe_id).order_by('created')
+        invoice_id = self.request._request.path[19:-1]
+        return InvoiceItem.objects.filter(invoice_id=invoice_id).order_by('created')
 
 
 class ChargeRestView(generics.ListAPIView):

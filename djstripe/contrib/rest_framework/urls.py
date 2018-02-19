@@ -41,7 +41,7 @@ urlpatterns = [
         name="invoice"
     ),
     url(
-        r"^invoices/(?P<stripe_id>\w+)/$",
+        r"^invoices/(?P<invoice_id>\w+)/$",
         views.InvoiceItemRestView.as_view(),
         name="invoice-item"
     ),
