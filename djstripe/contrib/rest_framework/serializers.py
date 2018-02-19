@@ -27,8 +27,24 @@ class CreateSubscriptionSerializer(serializers.Serializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+
+    card_info = serializers.SerializerMethodField()
+    plan = serializers.SerializerMethodField()
+
     class Meta:
         model = Invoice
+
+    def get_card_info(self, instance):
+        charge = Charge.objects.get(stripe_id=instance.charge)
+        card_info = {
+          "kind": charge.card_kind,
+          "last4": charge.card_last_4
+        }
+        return card_info
+
+    def get_plan(self, instance):
+        inv_item_plan = instance.items.get(plan__isnull=False)
+        return inv_item_plan.plan
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
