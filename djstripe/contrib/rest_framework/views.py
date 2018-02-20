@@ -131,7 +131,8 @@ class InvoiceRestView(generics.ListAPIView):
             subscriber=subscriber_request_callback(self.request)
         )
         # note: autopaginate by limiting to 12 latest invoices (past year only)
-        return Invoice.objects.filter(customer=customer).order_by('created')
+        # todo: paginate results given a cursor parameter see https://stripe.com/docs/api#list_invoices
+        return Invoice.objects.filter(customer=customer).order_by('created')[:12]
 
 
 class InvoiceItemsRestView(generics.ListAPIView):
