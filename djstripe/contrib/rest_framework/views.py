@@ -22,10 +22,10 @@ from rest_framework.views import APIView
 
 from djstripe.models import (Invoice, InvoiceItem)
 from djstripe.contrib.rest_framework.serializers import (
-        InvoiceSerializer, InvoiceItemSerializer, ChargeSerializer)
+        InvoiceSerializer, InvoiceDetailSerializer, ChargeSerializer)
 
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
-from ...models import Customer, Plan
+from ...models import Customer, Plan, Charge
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
 from .permissions import DJStripeSubscriptionPermission
 
@@ -130,17 +130,20 @@ class InvoiceRestView(generics.ListAPIView):
         customer, created = Customer.get_or_create(
             subscriber=subscriber_request_callback(self.request)
         )
+        # note: autopaginate by limiting to 12 latest invoices (past year only)
         return Invoice.objects.filter(customer=customer).order_by('created')
 
 
-class InvoiceItemRestView(generics.ListAPIView):
+class InvoiceItemsRestView(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated,)
-    serializer_class = InvoiceItemSerializer
+    serializer_class = InvoiceDetailSerializer
 
     def get_queryset(self, *args, **kwargs):
         invoice_id = self.request._request.path[19:-1]
-        return InvoiceItem.objects.filter(invoice_id=invoice_id).order_by('created')
+        # details serializer used
+        invoice_details = Invoice.objects.filter(id=invoice_id)
+        return invoice_details
 
 
 class ChargeRestView(generics.ListAPIView):
