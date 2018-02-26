@@ -46,6 +46,11 @@ urlpatterns = [
         name="invoice-item"
     ),
     url(
+        r"^billing-info/$",
+        views.BillingInfoRestView.as_view(),
+        name="billing-info"
+    ),
+    url(
         r"^charges/$",
         views.ChargeRestView.as_view(),
         name="charge"

@@ -14,6 +14,7 @@ import stripe
 from decimal import Decimal
 
 import django.dispatch
+from django.http import JsonResponse
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -119,6 +120,23 @@ class PlanRestView(APIView):
     def get(self, request):
         plans = [settings.DJSTRIPE_PLANS[plan] for plan in settings.DJSTRIPE_PLANS.keys()]
         return Response(plans)
+
+
+class BillingInfoRestView(APIView):
+
+    """
+        Pre-populate billing info for customer easy-editing
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        (customer, created) = Customer.get_or_create(subscriber=subscriber_request_callback(self.request))
+
+        # Use stripe api to pull identifiable billing address info
+        stripe_customer = stripe.Customer.retrieve(customer.stripe_id)
+
+        return JsonResponse({"active_card": stripe_customer.active_card})
 
 
 class InvoiceRestView(generics.ListAPIView):
