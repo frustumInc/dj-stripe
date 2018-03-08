@@ -136,7 +136,7 @@ class BillingInfoRestView(APIView):
         # Use stripe api to pull identifiable billing address info
         stripe_customer = stripe.Customer.retrieve(customer.stripe_id)
 
-        return JsonResponse({"active_card": stripe_customer.active_card})
+        return JsonResponse({"active_card": stripe_customer.get('active_card')})
 
 
 class InvoiceRestView(generics.ListAPIView):
