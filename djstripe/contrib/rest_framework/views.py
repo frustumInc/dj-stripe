@@ -14,18 +14,19 @@ import stripe
 from decimal import Decimal
 
 import django.dispatch
+from django.http import JsonResponse
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 
-from djstripe.models import Invoice
+from djstripe.models import (Invoice, InvoiceItem)
 from djstripe.contrib.rest_framework.serializers import (
-        InvoiceSerializer, ChargeSerializer)
+        InvoiceSerializer, InvoiceDetailSerializer, ChargeSerializer)
 
 from ...settings import subscriber_request_callback, CANCELLATION_AT_PERIOD_END
-from ...models import Customer, Plan
+from ...models import Customer, Plan, Charge
 from .serializers import SubscriptionSerializer, CreateSubscriptionSerializer
 from .permissions import DJStripeSubscriptionPermission
 
@@ -121,6 +122,23 @@ class PlanRestView(APIView):
         return Response(plans)
 
 
+class BillingInfoRestView(APIView):
+
+    """
+        Pre-populate billing info for customer easy-editing
+    """
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        (customer, created) = Customer.get_or_create(subscriber=subscriber_request_callback(self.request))
+
+        # Use stripe api to pull identifiable billing address info
+        stripe_customer = stripe.Customer.retrieve(customer.stripe_id)
+
+        return JsonResponse({"active_card": stripe_customer.get('active_card')})
+
+
 class InvoiceRestView(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated,)
@@ -130,7 +148,21 @@ class InvoiceRestView(generics.ListAPIView):
         customer, created = Customer.get_or_create(
             subscriber=subscriber_request_callback(self.request)
         )
-        return Invoice.objects.filter(customer=customer).order_by('created')
+        # note: autopaginate by limiting to 12 latest invoices (past year only)
+        # todo: paginate results given a cursor parameter see https://stripe.com/docs/api#list_invoices
+        return Invoice.objects.filter(customer=customer).order_by('created')[:12]
+
+
+class InvoiceItemsRestView(generics.ListAPIView):
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = InvoiceDetailSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        invoice_id = self.request._request.path[19:-1]
+        # details serializer used
+        invoice_details = Invoice.objects.filter(id=invoice_id)
+        return invoice_details
 
 
 class ChargeRestView(generics.ListAPIView):
