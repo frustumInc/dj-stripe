@@ -178,7 +178,7 @@ class ChargeRestView(generics.ListAPIView):
 
 
 class ChangeCreditCardRestView(APIView):
-    permission_classes = (IsAuthenticated, DJStripeSubscriptionPermission)
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         customer, created = Customer.get_or_create(
